@@ -12,5 +12,13 @@ db = firestore.client()
 
 
 # queries
-availableQueries = []
+availableQueries = ['resetCollections']
+collections = ['EquipmentProfiles', 'Sites', 'Users']
 
+def resetCollections():
+  # Deletes every document within the recorded collections
+  for collection in collections:
+    for doc in db.collection(collection).stream():
+      db.collection(collection).document(doc.id).delete()
+
+  # creates documents according to the local 'copy'
