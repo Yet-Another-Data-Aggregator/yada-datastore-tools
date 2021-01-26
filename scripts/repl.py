@@ -3,25 +3,24 @@ YADA datastore tools used to quickly moderate and reset data in the datastore du
 """
 import os.path
 from os import path
-import testConnection
+import firestore
 
 if not path.exists('./scripts/ServiceAccountKey.json'):
     print("Firestore secret access key is required to use these utilities. Save this file to `scripts/ServiceAccountKey.json`. Make sure this key is NOT committed to this public repository")
     quit()
 
 userInput = ""
-acceptedInput = ["help", "end", "test"]
+acceptedInput = ["help", "end"] + firestore.availableQueries
 
 while userInput != "end":
     if userInput not in acceptedInput:
         print("available commands:")
         for command in acceptedInput:
             print("\t", command)
-    elif userInput == "test":
-        testing()
+    elif userInput == "help":
+        for command in acceptedInput:
+            print("\t", command)
     else:
-        if userInput == "help":
-            for command in acceptedInput:
-                print("\t", command)
+        getattr(firestore, userInput)()
         
     userInput = input("$ ")
