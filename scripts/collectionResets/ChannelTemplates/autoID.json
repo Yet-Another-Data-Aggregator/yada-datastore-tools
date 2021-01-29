@@ -1,0 +1,6 @@
+{
+    "name": "name of template",
+    "channels": {
+        "channelName": "path to python script (upload file first so this can be of type referencetype in firestore)"
+    }
+}

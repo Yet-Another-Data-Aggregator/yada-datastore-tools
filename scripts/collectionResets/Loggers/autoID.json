@@ -1,0 +1,11 @@
+{
+    "channelTemplate": "templateID", 
+    "collectingData": true,
+    "data": {},
+    "ip": "ip addr",
+    "mac": "mac addr",
+    "notes": "notes",
+    "site": "siteID OR null",
+    "status": true,
+    "uptime": "timestamp?"
+}
