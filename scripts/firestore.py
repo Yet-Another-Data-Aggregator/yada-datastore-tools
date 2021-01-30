@@ -51,4 +51,4 @@ def registerAdminEmail():
 def createDB():
   pass
 
-# Example
+# New example
