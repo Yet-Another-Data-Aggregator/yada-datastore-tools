@@ -46,3 +46,7 @@ def registerAdminEmail():
     u'userGroup': 'owner'
   }
   db.collection('Users').document(user.uid).set(doc)
+
+# Function to initialize database with default admin account
+def createDB():
+  pass
