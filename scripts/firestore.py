@@ -50,3 +50,5 @@ def registerAdminEmail():
 # Function to initialize database with default admin account
 def createDB():
   pass
+
+# Test
