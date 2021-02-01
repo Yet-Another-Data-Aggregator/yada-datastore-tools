@@ -47,8 +47,9 @@ def registerAdminEmail():
   }
   db.collection('Users').document(user.uid).set(doc)
 
-# Function to initialize database with default admin account
-def createDB():
+# Function to create database collections with default admin account
+# NOTE: all collections are created with an empty document stub
+def createCollections():
+  # doc = {}
+  # db.collection('Users').
   pass
-
-# New example
