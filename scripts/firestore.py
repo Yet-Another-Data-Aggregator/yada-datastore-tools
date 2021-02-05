@@ -32,10 +32,10 @@ def resetCollections():
 
 
 def registerUser():
+  userName = input("Username: ")
+  userPassword = getpass("Password: ")
   emailAddress = input("Email address: ")
   phoneNumber = input("Phone number: ")
-  userPassword = getpass("Password: ")
-  userName = input("Username: ")
   userRights = input("User group ([O]Owner, [A]Admin, [P]Power, [U]User):  ")
   while userRights not in ['O', 'o', 'A', 'a', 'P', 'p', 'U', 'u']:
     userRights = input("User group ([O]Owner, [A]Admin, [P]Power, [U]User):  ")
@@ -102,8 +102,8 @@ def createCollections():
             print("DATABASE OWNER")
             registerUser()
         else:
-            timestamp, doc_ref = db.collection(c).add(doc) # Create document
-            db.collection(c).document(str(doc_ref)).delete() # Remove it from collection
+            db.collection(c).document(u'stub').set(doc) # Create document
+            db.collection(c).document(u'stub').delete() # Remove it from collection
 
     print("Successfully created collections. To add additional users, run the registerUser function.")
     print("To set up the database again, run the resetCollections function and then the createCollections function.")
