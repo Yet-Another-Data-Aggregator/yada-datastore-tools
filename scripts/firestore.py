@@ -36,9 +36,9 @@ def registerUser():
   phoneNumber = input("Phone number: ")
   userPassword = getpass("Password: ")
   userName = input("Username: ")
-  userRights = input("User group: [O]Owner, [A]Admin, [P]Power, [U]User")
+  userRights = input("User group ([O]Owner, [A]Admin, [P]Power, [U]User):  ")
   while userRights not in ['O', 'o', 'A', 'a', 'P', 'p', 'U', 'u']:
-    userRights = input("User group: [O]Owner, [A]Admin, [P]Power, [U]User:  ")
+    userRights = input("User group ([O]Owner, [A]Admin, [P]Power, [U]User):  ")
 
   if userRights in ['o', 'O']:
     userRights = 'Owner'
@@ -56,7 +56,7 @@ def registerUser():
       display_name=userName,
       disabled=False)
 
-  print('Sucessfully created new user: {0}'.format(user.uid))
+  print('Sucessfully created new user with ID: {0}'.format(user.uid))
   
   doc = {
       u'email': emailAddress,
@@ -79,7 +79,7 @@ def createCollections():
             # Get user input for config fields
             orgName = input("Organization name: ")
             ownerEmail = input("Owner's email address: ")
-            defaultPass = input("Default user password: ")
+            defaultPass = getpass("Default user password: ")
             while len(defaultPass) < 6:
                 print("Default password must be at least 6 characters!")
                 defaultPass = input("Default user password: ")
@@ -96,7 +96,7 @@ def createCollections():
 
             # Write dict to file
             with open('config.json', 'w') as f:
-                json.dump(data, f)
+                json.dump(data, f, indent=4, sort_keys=True)
 
         elif c == 'Users':
             print("DATABASE OWNER")
