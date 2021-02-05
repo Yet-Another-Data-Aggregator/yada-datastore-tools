@@ -1,19 +1,23 @@
-import os, json 
+import os
+import json
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import auth
+from getpass import getpass
 
 # Use the application default credentials
-json = json.load(open('./scripts/ServiceAccountKey.json'))
-cred = credentials.Certificate(json)
+jsonKey = json.load(open('./scripts/ServiceAccountKey.json'))
+cred = credentials.Certificate(jsonKey)
 app = firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
 # queries
-availableQueries = ['resetCollections', 'registerAdminEmail']
-collections = ['EquipmentProfiles', 'Sites', 'Users']
+availableQueries = ['resetCollections', 'registerUser', 'createCollections']
+
+# Collections
+collections = ['ChannelTemplates', 'Config', 'Loggers', 'Sites', 'Users']
 
 def resetCollections():
   print("this function is temporarily disabled to prevent accidental data loss")
@@ -27,29 +31,79 @@ def resetCollections():
   # creates documents according to the local 'copy'
 
 
-def registerAdminEmail():
-  emailAddress = input("emailAddress: ")
-  phoneNumber = input("phoneNumber: ")
-  userPassword = input("password: ")
-  userName = input("username: ")
+def registerUser():
+  emailAddress = input("Email address: ")
+  phoneNumber = input("Phone number: ")
+  userPassword = getpass("Password: ")
+  userName = input("Username: ")
+  userRights = input("User group: [O]Owner, [A]Admin, [P]Power, [U]User")
+  while userRights not in ['O', 'o', 'A', 'a', 'P', 'p', 'U', 'u']:
+    userRights = input("User group: [O]Owner, [A]Admin, [P]Power, [U]User:  ")
+
+  if userRights in ['o', 'O']:
+    userRights = 'Owner'
+  if userRights in ['A', 'a']:
+    userRights = 'Admin'
+  if userRights in ['P', 'p']:
+    userRights = 'Power'
+  if userRights in ['U', 'u']:
+    userRights == 'User'
+
   user = auth.create_user(
       email=emailAddress,
       email_verified=False,
       password=userPassword,
       display_name=userName,
       disabled=False)
+
   print('Sucessfully created new user: {0}'.format(user.uid))
-  # todo: create User Document
+  
   doc = {
-    u'email': emailAddress,
-    u'phoneNumber': phoneNumber,
-    u'userGroup': 'owner'
+      u'email': emailAddress,
+      u'phoneNumber': phoneNumber,
+      u'userGroup': userRights,
+      u'defaults': True
   }
+
   db.collection('Users').document(user.uid).set(doc)
 
 # Function to create database collections with default admin account
-# NOTE: all collections are created with an empty document stub
+# NOTE: all collections except Config and Users are created with a document stub that contains only one field,
+#       since empty documents are automatically removed by Firestore
 def createCollections():
-  # doc = {}
-  # db.collection('Users').
-  pass
+    doc = {u'name': ""}
+
+    for c in collections:
+        if c == 'Config':
+            print("CONFIGURATION")
+            # Get user input for config fields
+            orgName = input("Organization name: ")
+            ownerEmail = input("Owner's email address: ")
+            defaultPass = input("Default user password: ")
+            while len(defaultPass) < 6:
+                print("Default password must be at least 6 characters!")
+                defaultPass = input("Default user password: ")
+
+            # Create dict object based on input
+            data = {
+                u'defaultUserPassword': defaultPass,
+                u'orgName': orgName,
+                u'ownerEmail': ownerEmail
+            }
+
+            # Add dict to collection
+            db.collection(c).document(u'config').set(data)
+
+            # Write dict to file
+            with open('config.json', 'w') as f:
+                json.dump(data, f)
+
+        elif c == 'Users':
+            print("DATABASE OWNER")
+            registerUser()
+        else:
+            timestamp, doc_ref = db.collection(c).add(doc) # Create document
+            db.collection(c).document(str(doc_ref)).delete() # Remove it from collection
+
+    print("Successfully created collections. To add additional users, run the registerUser function.")
+    print("To set up the database again, run the resetCollections function and then the createCollections function.")
