@@ -1,4 +1,5 @@
-import os, json 
+import os
+import json
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
@@ -14,50 +15,114 @@ db = firestore.client()
 
 # queries
 availableQueries = ['resetCollections', 'registerUser']
-collections = ['EquipmentProfiles', 'Sites', 'Users']
+collections = ['ChannelTemplates', 'Config', 'Loggers', 'Sites']
+
 
 def resetCollections():
-  print("this function is temporarily disabled to prevent accidental data loss")
-  return
-  return
-  # Deletes every document within the recorded collections
-  for collection in collections:
-    for doc in db.collection(collection).stream():
-      db.collection(collection).document(doc.id).delete()
+    # Deletes every document within the recorded collections
+    for collection in collections:
+        for doc in db.collection(collection).stream():
+            db.collection(collection).document(doc.id).delete()
 
-  # creates documents according to the local 'copy'
+    # creates documents according to the local 'copy'
+    defaultData = {
+        u'ChannelTemplates': {
+            u'autoID': [{
+                u'channels': {
+                    u'exampleChannelName': u'/filepath/to/document'  # TODO: fix this
+                },
+                u'name': 'Example name for the template'
+            }],
+            u'specificID': {}
+        },
+        u'Config': {
+            u'autoID': [],
+            u'specificID': {
+                u'config': {
+                    u'defaultUserPassword': "yadaDefault",
+                    u'orgName': 'organisation name',
+                    u'ownerEmail': 'jorstadsd17@gcc.edu'
+                }
+            }
+        },
+        u'Loggers': {
+            u'autoID': [
+                {
+                    u'channelTemplate': u'templateID',  # TODO: fix this
+                    u'collectingData': True,
+                    u'equipment': None,  # TODO: fix this
+                    u'ip': 'ip addr',
+                    u'mac': 'mac address',
+                    u'notes': 'any notes for this logger',
+                    u'site': 'siteID',  # TODO: fix this
+                    u'status': True,
+                    u'uptime': None,
+                    u'data': [
+                        # TODO: add data
+                    ]
+                }
+            ],
+            u'specificID': {}
+        },
+        u'Sites': {
+            u'autoID': [
+                {
+                    u'address': '200 campus drive, grove city pa, 16127',
+                    u'name': 'Grove City Stem',
+                    u'notes': 'Notes on the stem buiding site',
+                    u'userNotifications': {
+                        # TODO: add users
+                    },
+                    u'equipmentUnits': {
+                        u'inside top left hvac': {  # TODO: fix this
+                            u'faults': [],
+                            u'loggers': []
+                        }
+                    }
+                }
+            ],
+            u'specificID': {},
+        }
+    }
+    # inserts the documents specified in defaultData
+    for collection in defaultData.keys():
+        for docDict in defaultData[collection]['autoID']:
+            createdDoc = db.collection(collection).add(docDict)
+        for (docID, docDict) in defaultData[collection]['specificID'].items():
+            createdDoc = db.collection(collection).document(docID).set(docDict)
 
 
 def registerUser():
-  emailAddress = input("emailAddress: ")
-  phoneNumber = input("phoneNumber: ")
-  userPassword = getpass("password: ")
-  userName = input("username: ")
-  userRights = input("user group: [O]Owner, [A]Admin, [P]Power, [U]User")
-  while userRights not in ['O', 'o', 'A', 'a', 'P', 'p', 'U', 'u']:
-    userRights = input("user group: [O]Owner, [A]Admin, [P]Power, [U]User:  ")
+    emailAddress = input("emailAddress: ")
+    phoneNumber = input("phoneNumber: ")
+    userPassword = getpass("password: ")
+    userName = input("username: ")
+    userRights = input("user group: [O]Owner, [A]Admin, [P]Power, [U]User")
+    while userRights not in ['O', 'o', 'A', 'a', 'P', 'p', 'U', 'u']:
+        userRights = input(
+            "user group: [O]Owner, [A]Admin, [P]Power, [U]User:  ")
 
-  if userRights in ['o', 'O']:
-    userRights = 'Owner'
-  if userRights in ['A', 'a']:
-    userRights = 'Admin'
-  if userRights in ['P', 'p']:
-    userRights = 'Power'
-  if userRights in ['U', 'u']:
-    userRights == 'User'
+    if userRights in ['o', 'O']:
+        userRights = 'Owner'
+    if userRights in ['A', 'a']:
+        userRights = 'Admin'
+    if userRights in ['P', 'p']:
+        userRights = 'Power'
+    if userRights in ['U', 'u']:
+        userRights == 'User'
 
-  user = auth.create_user(
-      email=emailAddress,
-      email_verified=False,
-      password=userPassword,
-      display_name=userName,
-      disabled=False)
-  print('Sucessfully created new user: {0}'.format(user.uid))
-  # todo: create User Document
-  doc = {
-    u'email': emailAddress,
-    u'phoneNumber': phoneNumber,
-    u'userGroup': userRights,
-    u'defaults': True
-  }
-  db.collection('Users').document(user.uid).set(doc)
+    user = auth.create_user(
+        email=emailAddress,
+        email_verified=False,
+        password=userPassword,
+        display_name=userName,
+        disabled=False)
+    print('Sucessfully created new user: {0}'.format(user.uid))
+    # todo: create User Document
+    doc = {
+        u'email': emailAddress,
+        u'phoneNumber': phoneNumber,
+        u'userGroup': userRights,
+        u'defaults': True
+    }
+    db.collection('Users').document(user.uid).set(doc)
