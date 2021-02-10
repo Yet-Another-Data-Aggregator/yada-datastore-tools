@@ -13,11 +13,12 @@ app = firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-# queries
+# Queries
 availableQueries = ['resetCollections', 'registerUser', 'createCollections']
 
 # Collections
 collections = ['ChannelTemplates', 'Config', 'Loggers', 'Sites', 'Users']
+
 
 def resetCollections():
   print("this function is temporarily disabled to prevent accidental data loss")
@@ -57,7 +58,7 @@ def registerUser():
       disabled=False)
 
   print('Sucessfully created new user with ID: {0}'.format(user.uid))
-  
+
   doc = {
       u'email': emailAddress,
       u'phoneNumber': phoneNumber,
@@ -70,6 +71,8 @@ def registerUser():
 # Function to create database collections with default admin account
 # NOTE: all collections except Config and Users are created with a document stub that contains only one field,
 #       since empty documents are automatically removed by Firestore
+
+
 def createCollections():
     doc = {u'name': ""}
 
@@ -102,8 +105,9 @@ def createCollections():
             print("DATABASE OWNER")
             registerUser()
         else:
-            db.collection(c).document(u'stub').set(doc) # Create document
-            db.collection(c).document(u'stub').delete() # Remove it from collection
+            db.collection(c).document(u'stub').set(doc)  # Create document
+            # Remove it from collection
+            db.collection(c).document(u'stub').delete()
 
     print("Successfully created collections. To add additional users, run the registerUser function.")
     print("To set up the database again, run the resetCollections function and then the createCollections function.")
