@@ -14,7 +14,7 @@ app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # queries
-availableQueries = ['resetCollections', 'registerUser']
+availableQueries = ['resetCollections', 'registerUser', 'generateData', 'generateFault']
 collections = ['ChannelTemplates', 'Config', 'Loggers', 'Sites']
 
 
@@ -92,6 +92,31 @@ def resetCollections():
             createdDoc = db.collection(collection).document(docID).set(docDict)
 
 
+def generateData():
+    selectedLoggers = []
+    invalidInput = True
+
+    # get list of available sites
+    sites = getSites()
+    # TODO: while active, generate data for every logger and push to datastore. This relies on the logger profiles to generate valid data
+
+def generateFault():
+    selectedLoggers = []
+    userInput = ''
+
+    # list of available sites
+    sites = getSites()
+    while (not userInput.isdecimal()) or int(userInput) not in range(len(sites)):
+        index = 0
+        for site in sites:
+            print(f'[{index}] {site.to_dict()["name"]}')
+            index += 1
+        userInput = input('Select site to generate fault: ')
+    
+    site = sites[int(userInput)]
+    # get logger channels for the loggers and generate faults
+
+
 def registerUser():
     emailAddress = input("emailAddress: ")
     phoneNumber = input("phoneNumber: ")
@@ -126,3 +151,12 @@ def registerUser():
         u'defaults': True
     }
     db.collection('Users').document(user.uid).set(doc)
+
+
+# ------
+
+def getSites():
+    sites = []
+    for doc in db.collection('Sites').stream():
+        sites.append(doc)
+    return sites
