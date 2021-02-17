@@ -38,7 +38,7 @@ def deleteEmails():
 def sendMail():
     EMAIL = "YADA.Sender@gmail.com"
     PASS = "HLt8AJpfNgm8Jvn"
-    adminAddresses = ", ".join([getAdminAddresses(),"YADA.Sender@gmail.com"])
+    adminAddresses = "YADA.Sender@gmail.com, " + ", ".join(getAdminAddresses())
 
     while True:
         with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10.0) as server:
@@ -54,4 +54,5 @@ def sendMail():
 
 if __name__ == "__main__":
     sender = threading.Thread(target=sendMail)
+    print("Starting sender thread...")
     sender.start()
