@@ -35,8 +35,6 @@ def deleteEmails():
     for doc in docs:
         db.collection("Emails").document(doc.id).delete()
 
-    print("Deleted emails.")
-
 def sendMail():
     EMAIL = "YADA.Sender@gmail.com"
     PASS = "HLt8AJpfNgm8Jvn"
