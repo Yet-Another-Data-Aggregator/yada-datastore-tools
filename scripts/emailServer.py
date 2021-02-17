@@ -1,11 +1,9 @@
-import os
-import json
+import os, json, time, smtplib
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
 from firebase_admin import auth
-import time
-import threading
+from email.message import EmailMessage
 
 # Use the application default credentials
 jsonKey = json.load(open('ServiceAccountKey.json'))
@@ -14,17 +12,30 @@ app = firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
-# Create an Event for notifying main thread.
-callback_done = threading.Event()
+def getAdminAddresses():
+    docs = db.collection("Users").where("userGroup", "in", ["Owner", "Admin"]).stream()
 
-# Create a callback on_snapshot function to capture changes
-def on_snapshot(col_snapshot, changes, read_time):
-    print(u'Callback received query snapshot.')
-    for doc in col_snapshot:
-        print(f'{doc.id}')
-    callback_done.set()
+    return [doc.to_dict()["email"] for doc in docs]
 
-col_query = db.collection(u'Emails')
+def getEmails():
+    docs = db.collection("Emails").stream()
+    emails = [doc.to_dict() for doc in docs]
 
-# Watch the collection query
-query_watch = col_query.on_snapshot(on_snapshot)
+    emailMessages = []
+    for e in emails:
+        msg = EmailMessage()
+        msg.set_content(e["message"])
+        msg["Subject"] = e["subject"]
+        msg["From"] = e["email"]
+        emailMessages.append(e)
+    
+    return emailMessages
+
+with smtplib.SMTP("smtp.mailtrap.io", 465) as server:
+    server.login("7ef8ab7208d17b", "d16d657eeea76f")
+    adminAddresses = ", ".join(getAdminAddresses())
+    for e in getEmails():
+        print(e)
+        server.sendmail(e["From"], adminAddresses, e.as_string())
+
+print("Sent.")

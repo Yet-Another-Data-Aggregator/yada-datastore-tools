@@ -71,8 +71,6 @@ def registerUser():
 # Function to create database collections with default admin account
 # NOTE: all collections except Config and Users are created with a document stub that contains only one field,
 #       since empty documents are automatically removed by Firestore
-
-
 def createCollections():
     doc = {u'name': ""}
 
