@@ -14,7 +14,8 @@ app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 # queries
-availableQueries = ['resetCollections', 'registerUser', 'generateData', 'generateFault']
+availableQueries = ['resetCollections', 'registerUser',
+                    'generateData', 'pushSpecificData']
 collections = ['ChannelTemplates', 'Config', 'Loggers', 'Sites']
 
 
@@ -50,16 +51,14 @@ def resetCollections():
                 {
                     u'channelTemplate': u'templateID',  # TODO: fix this
                     u'collectingData': True,
-                    u'equipment': None,  # TODO: fix this
+                    u'equipment': None,
                     u'ip': 'ip addr',
                     u'mac': 'mac address',
                     u'notes': 'any notes for this logger',
-                    u'site': 'siteID',  # TODO: fix this
+                    u'site': None,
                     u'status': True,
                     u'uptime': None,
-                    u'data': [
-                        # TODO: add data
-                    ]
+                    u'data': []
                 }
             ],
             u'specificID': {}
@@ -71,10 +70,9 @@ def resetCollections():
                     u'name': 'Grove City Stem',
                     u'notes': 'Notes on the stem buiding site',
                     u'userNotifications': {
-                        # TODO: add users
                     },
                     u'equipmentUnits': {
-                        u'inside top left hvac': {  # TODO: fix this
+                        u'inside top left hvac': {
                             u'faults': [],
                             u'loggers': []
                         }
@@ -93,28 +91,17 @@ def resetCollections():
 
 
 def generateData():
-    selectedLoggers = []
-    invalidInput = True
+    """
+    pushes the following data to the specified logger
+    """
+    loggerId = ''
+    data = {
+        u'data': firestore.FieldValue.arrayUnion({
+            
+        })
+    }
 
-    # get list of available sites
-    sites = getSites()
-    # TODO: while active, generate data for every logger and push to datastore. This relies on the logger profiles to generate valid data
-
-def generateFault():
-    selectedLoggers = []
-    userInput = ''
-
-    # list of available sites
-    sites = getSites()
-    while (not userInput.isdecimal()) or int(userInput) not in range(len(sites)):
-        index = 0
-        for site in sites:
-            print(f'[{index}] {site.to_dict()["name"]}')
-            index += 1
-        userInput = input('Select site to generate fault: ')
-    
-    site = sites[int(userInput)]
-    # get logger channels for the loggers and generate faults
+    db.collection('Loggers').document(loggerId).update(data)
 
 
 def registerUser():
@@ -153,7 +140,11 @@ def registerUser():
     db.collection('Users').document(user.uid).set(doc)
 
 
-# ------
+def pushSpecificData():
+    print("using the information in the python script")
+
+    # ------
+
 
 def getSites():
     sites = []
