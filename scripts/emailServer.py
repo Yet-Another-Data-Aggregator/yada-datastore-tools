@@ -1,4 +1,4 @@
-import os, json, time, smtplib
+import os, json, time, smtplib, threading
 import firebase_admin
 from firebase_admin import credentials
 from firebase_admin import firestore
@@ -14,7 +14,6 @@ db = firestore.client()
 
 def getAdminAddresses():
     docs = db.collection("Users").where("userGroup", "in", ["Owner", "Admin"]).stream()
-
     return [doc.to_dict()["email"] for doc in docs]
 
 def getEmails():
@@ -27,15 +26,33 @@ def getEmails():
         msg.set_content(e["message"])
         msg["Subject"] = e["subject"]
         msg["From"] = e["email"]
-        emailMessages.append(e)
+        emailMessages.append(msg)
     
     return emailMessages
 
-with smtplib.SMTP("smtp.mailtrap.io", 465) as server:
-    server.login("7ef8ab7208d17b", "d16d657eeea76f")
-    adminAddresses = ", ".join(getAdminAddresses())
-    for e in getEmails():
-        print(e)
-        server.sendmail(e["From"], adminAddresses, e.as_string())
+def deleteEmails():
+    docs = db.collection("Emails").stream()
+    for doc in docs:
+        db.collection("Emails").document(doc.id).delete()
 
-print("Sent.")
+    print("Deleted emails.")
+
+def sendMail():
+    EMAIL = "YADA.Sender@gmail.com"
+    PASS = "HLt8AJpfNgm8Jvn"
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10.0) as server:
+        server.ehlo()
+        server.login(EMAIL, PASS)
+        adminAddresses = ", ".join(getAdminAddresses())
+
+        while True:
+            emails = getEmails()
+            for e in emails:
+                server.sendmail(e["From"], adminAddresses, e.as_string())
+                print(f'Sent message from {e.get("From")}.')
+            deleteEmails()            
+            time.sleep(5.0)
+
+if __name__ == "__main__":
+    sender = threading.Thread(target=sendMail)
+    sender.start()
