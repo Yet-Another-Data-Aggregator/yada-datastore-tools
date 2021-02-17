@@ -40,12 +40,13 @@ def deleteEmails():
 def sendMail():
     EMAIL = "YADA.Sender@gmail.com"
     PASS = "HLt8AJpfNgm8Jvn"
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10.0) as server:
-        server.ehlo()
-        server.login(EMAIL, PASS)
-        adminAddresses = ", ".join(getAdminAddresses())
+    adminAddresses = ", ".join([getAdminAddresses(),"YADA.Sender@gmail.com"])
 
-        while True:
+    while True:
+        with smtplib.SMTP_SSL("smtp.gmail.com", 465, timeout=10.0) as server:
+            server.ehlo()
+            server.login(EMAIL, PASS)
+       
             emails = getEmails()
             for e in emails:
                 server.sendmail(e["From"], adminAddresses, e.as_string())
