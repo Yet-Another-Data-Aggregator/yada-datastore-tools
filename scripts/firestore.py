@@ -7,15 +7,16 @@ from firebase_admin import auth
 from getpass import getpass
 
 # Use the application default credentials
-json = json.load(open('./scripts/ServiceAccountKey.json'))
-cred = credentials.Certificate(json)
+jsonKey = json.load(open('./scripts/ServiceAccountKey.json'))
+cred = credentials.Certificate(jsonKey)
 app = firebase_admin.initialize_app(cred)
 
 db = firestore.client()
 
 # queries
 availableQueries = ['resetCollections', 'registerUser',
-                    'generateData', 'pushSpecificData']
+                    'generateData', 'pushSpecificData', 'createCollections']
+# Collections
 collections = ['ChannelTemplates', 'Config', 'Loggers', 'Sites']
 
 
@@ -140,14 +141,52 @@ def registerUser():
     db.collection('Users').document(user.uid).set(doc)
 
 
-def pushSpecificData():
-    print("using the information in the python script")
-
-    # ------
-
-
 def getSites():
     sites = []
     for doc in db.collection('Sites').stream():
         sites.append(doc)
     return sites
+
+# Function to create database collections with default admin account
+# NOTE: all collections except Config and Users are created with a document stub that contains only one field,
+#       since empty documents are automatically removed by Firestore
+
+
+def createCollections():
+    doc = {u'name': ""}
+
+    for c in collections:
+        if c == 'Config':
+            print("CONFIGURATION")
+            # Get user input for config fields
+            orgName = input("Organization name: ")
+            ownerEmail = input("Owner's email address: ")
+            defaultPass = getpass("Default user password: ")
+            while len(defaultPass) < 6:
+                print("Default password must be at least 6 characters!")
+                defaultPass = input("Default user password: ")
+
+            # Create dict object based on input
+            data = {
+                u'defaultUserPassword': defaultPass,
+                u'orgName': orgName,
+                u'ownerEmail': ownerEmail
+            }
+
+            # Add dict to collection
+            db.collection(c).document(u'config').set(data)
+
+            # Write dict to file
+            with open('config.json', 'w') as f:
+                json.dump(data, f, indent=4, sort_keys=True)
+
+        elif c == 'Users':
+            print("DATABASE OWNER")
+            registerUser()
+        else:
+            db.collection(c).document(u'stub').set(doc)  # Create document
+            # Remove it from collection
+            db.collection(c).document(u'stub').delete()
+
+    print("Successfully created collections. To add additional users, run the registerUser function.")
+    print("To set up the database again, run the resetCollections function and then the createCollections function.")
