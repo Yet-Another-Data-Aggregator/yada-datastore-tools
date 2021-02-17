@@ -48,7 +48,7 @@ def sendMail():
         while True:
             emails = getEmails()
             for e in emails:
-                server.sendmail(e["From"], ",".join(adminAddresses), e.as_string())
+                server.sendmail(e["From"], adminAddresses, e.as_string())
                 print(f'Sent message from {e.get("From")}.')
             deleteEmails()            
             time.sleep(5.0)
