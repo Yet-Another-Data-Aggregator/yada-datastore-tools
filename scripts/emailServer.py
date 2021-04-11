@@ -13,7 +13,11 @@ app = firebase_admin.initialize_app(cred)
 db = firestore.client()
 
 def getAdminAddresses():
-    docs = db.collection("Users").where("userGroup", "in", ["Owner", "Admin"]).stream()
+    docs = db.collection("Users").where(
+        "userGroup", "in", ["Owner", "Admin"]
+    ).where(
+        "emailNotifications", "==", True
+    ).stream()
     return [doc.to_dict()["email"] for doc in docs]
 
 def getEmails():
