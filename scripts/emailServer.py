@@ -48,7 +48,6 @@ def getFaultEmails():
     for fault in faults:
         loggerId = fault['logger']
         message = fault['message']
-        recipients = []
         # get siteID and equipment name
         loggerDoc = db.collection(u'Loggers').document(
             loggerId).get().to_dict()
@@ -62,15 +61,22 @@ def getFaultEmails():
         # iterate over user documents
         users = [doc.to_dict() for doc in db.collection("Users").stream()]
         for user in users:
-            if ('equipmentNotifications' in user):
+            if (('equipmentNotifications' in user)):
                 if (siteId in user['equipmentNotifications']):
                     subscribed = user['equipmentNotifications'][siteId][equipName]
-                    if subscribed:
+                    notificationsOn = ('emailNotifications' in user and user['emailNotifications']) or ('emailNotifications' not in user)
+                    if subscribed and notificationsOn:
                         # generate email
                         emailRecipient = user['email']
-                        emailSubject = "Unit fault detected"
+                        emailSubject = f"Fault detected on {equipName}"
                         emailContent = message
-                        # TODO create email object, append to emails
+
+                        msg = EmailMessage()
+                        msg.set_content(emailContent)
+                        msg["Subject"] = emailSubject
+                        msg["To"] = emailRecipient
+                        emails.append(msg)
+
     return emails
 
 
@@ -101,11 +107,17 @@ def sendMail():
                 server.sendmail(e["From"], adminAddresses, e.as_string())
                 print(f'Sent message from {e.get("From")}.')
             deleteEmails()
+
+            notifications = getFaultEmails()
+            for n in notifications:
+                server.sendmail(EMAIL, [n["To"], EMAIL], n.as_string())
+                print(f'Sent message to {n["To"]}.')
+            deleteFaults()
+
             time.sleep(5.0)
 
 
 if __name__ == "__main__":
-    getFaultEmails()
-    # sender = threading.Thread(target=sendMail)
-    # print("Starting sender thread...")
-    # sender.start()
+    sender = threading.Thread(target=sendMail)
+    print("Starting sender thread...")
+    sender.start()

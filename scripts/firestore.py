@@ -6,7 +6,7 @@ from firebase_admin import auth
 from getpass import getpass
 
 # Use the application default credentials
-jsonKey = json.load(open('./scripts/ServiceAccountKey.json'))
+jsonKey = json.load(open('ServiceAccountKey.json'))
 cred = credentials.Certificate(jsonKey)
 app = firebase_admin.initialize_app(cred)
 
