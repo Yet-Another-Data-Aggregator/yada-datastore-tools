@@ -46,36 +46,40 @@ def getFaultEmails():
     faults = [doc.to_dict() for doc in docs]
     emails = []
     for fault in faults:
-        loggerId = fault['logger']
-        message = fault['message']
-        # get siteID and equipment name
-        loggerDoc = db.collection(u'Loggers').document(
-            loggerId).get().to_dict()
-        siteId = loggerDoc['site']
-        siteDoc = db.collection(u'Sites').document(siteId).get().to_dict()
-        equipName = ''
-        for unit in siteDoc['equipmentUnits']:
-            if (loggerId in unit['loggers']):
-                equipName = unit['name']
+        try:
+            loggerId = fault['logger']
+            message = fault['message']
+            # get siteID and equipment name
+            loggerDoc = db.collection(u'Loggers').document(
+                loggerId).get().to_dict()
+            siteId = loggerDoc['site']
+            siteDoc = db.collection(u'Sites').document(siteId).get().to_dict()
+            equipName = ''
+            for unit in siteDoc['equipmentUnits']:
+                if (loggerId in unit['loggers']):
+                    equipName = unit['name']
 
-        # iterate over user documents
-        users = [doc.to_dict() for doc in db.collection("Users").stream()]
-        for user in users:
-            if (('equipmentNotifications' in user)):
-                if (siteId in user['equipmentNotifications']):
-                    subscribed = user['equipmentNotifications'][siteId][equipName]
-                    notificationsOn = ('emailNotifications' in user and user['emailNotifications']) or ('emailNotifications' not in user)
-                    if subscribed and notificationsOn:
-                        # generate email
-                        emailRecipient = user['email']
-                        emailSubject = f"Fault detected on {equipName}"
-                        emailContent = message
+            # iterate over user documents
+            users = [doc.to_dict() for doc in db.collection("Users").stream()]
+            for user in users:
+                if (('equipmentNotifications' in user)):
+                    if (siteId in user['equipmentNotifications']):
+                        subscribed = user['equipmentNotifications'][siteId][equipName]
+                        notificationsOn = ('emailNotifications' in user and user['emailNotifications']) or (
+                            'emailNotifications' not in user)
+                        if subscribed and notificationsOn:
+                            # generate email
+                            emailRecipient = user['email']
+                            emailSubject = f"Fault detected on {equipName}"
+                            emailContent = message
 
-                        msg = EmailMessage()
-                        msg.set_content(emailContent)
-                        msg["Subject"] = emailSubject
-                        msg["To"] = emailRecipient
-                        emails.append(msg)
+                            msg = EmailMessage()
+                            msg.set_content(emailContent)
+                            msg["Subject"] = emailSubject
+                            msg["To"] = emailRecipient
+                            emails.append(msg)
+        except:
+            print("a notification document was incorrectly created")
 
     return emails
 
